@@ -123,10 +123,13 @@ public class PullRequestStats {
         prepareCredentials(client);
         client.setUserAgent("GitHub PR Stats Bot/0.0.1 (+http://github.com/rvesse/gh-pr-stats.git)");
 
-        // Get the user just to force us to make one request so we can get stats
-        // about the remaining requests
-        @SuppressWarnings("unused")
-        User user = new UserService(client).getUser();
+        try {
+            // Get the user just to force us to make one request so we can get stats
+            // about the remaining requests
+            @SuppressWarnings("unused")
+            User user = new UserService(client).getUser();
+        } catch (Exception ignored) {
+        }
         System.out.println("You have " + client.getRemainingRequests() + " GitHub API requests of "
                 + client.getRequestLimit() + " remaining");
         long start = client.getRemainingRequests();
@@ -303,6 +306,11 @@ public class PullRequestStats {
             client.setOAuth2Token(this.oauthToken);
             System.out.println("Authenticating to GitHub using OAuth2 Token");
         } else {
+            if (System.console() == null && (this.user == null || this.pwd == null)) {
+                System.out.println("Using non-authenticated (rate-limited) access to GitHub");
+                return;
+            }
+
             // Username and Password authentication
             if (this.user == null) {
                 System.out.print("Please enter your GitHub username [" + System.getProperty("user.name") + "]: ");
